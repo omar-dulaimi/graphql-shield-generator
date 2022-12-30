@@ -1,0 +1,35 @@
+{
+  "name": "graphql-shield-generator",
+  "version": "0.0.0-0",
+  "description": "Emits a GraphQL Shield from your GraphQL schema",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "prerelease": "npm run build",
+    "release": "./package.sh && cd package && npm publish",
+    "prettier": "prettier --ignore-path .gitignore --write --list-different \"**/*.{ts,tsx,yml}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omar-dulaimi/graphql-shield-generator.git"
+  },
+  "keywords": [
+    "graphql",
+    "graphql-shield",
+    "graphql-shield-generator"
+  ],
+  "author": "omar-dulaimi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/omar-dulaimi/graphql-shield-generator/issues"
+  },
+  "homepage": "https://github.com/omar-dulaimi/graphql-shield-generator#readme",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "prettier": "^2.8.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.4"
+  }
+}

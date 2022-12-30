@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "baseUrl": ".",
+
+    "outDir": "dist",
+
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "target": "es2019",
+    "lib": ["es2019", "DOM"],
+    "suppressImplicitAnyIndexErrors": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "alwaysStrict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["dist"]
+}
