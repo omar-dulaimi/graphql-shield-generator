@@ -32,9 +32,6 @@ export const generateGraphqlShield = async (schema: GraphQLSchema, customPath: C
   subscriptions.sort();
 
   const shieldText = constructShield({ queries, mutations, subscriptions });
-  // TODO: provide option for output path
-  // if (!customPath?.path) await writeFileSafely(path.join(cwd(), 'shield.js'), shieldText);
-  // else await writeFileSafely(path.resolve(cwd(), customPath?.path, 'shield.js'), shieldText);
   const ext = js ? 'js' : 'ts';
   let filePath = customPath.path ? path.resolve(cwd(), customPath?.path, 'shield') : path.join(cwd(), 'shield');
 
