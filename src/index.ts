@@ -3,10 +3,10 @@ import { GraphQLSchema } from 'graphql';
 import path from 'path';
 import { cwd } from 'process';
 import { constructShield } from './helpers';
-import type { RootType } from './types';
+import type { RootType, CustomPath } from './types';
 import { writeFileSafely } from './utils/writeFileSafely';
 
-export const generateGraphqlShield = async (schema: GraphQLSchema) => {
+export const generateGraphqlShield = async (schema: GraphQLSchema, customPath: CustomPath, js: boolean = false) => {
   const queries: RootType = [];
   const mutations: RootType = [];
   const subscriptions: RootType = [];
@@ -33,6 +33,16 @@ export const generateGraphqlShield = async (schema: GraphQLSchema) => {
 
   const shieldText = constructShield({ queries, mutations, subscriptions });
   // TODO: provide option for output path
-  await writeFileSafely(path.join(cwd(), 'shield.ts'), shieldText);
-  // TODO: provide option to generate a JS shield
+  // if (!customPath?.path) await writeFileSafely(path.join(cwd(), 'shield.js'), shieldText);
+  // else await writeFileSafely(path.resolve(cwd(), customPath?.path, 'shield.js'), shieldText);
+  const ext = js ? 'js' : 'ts';
+  let filePath = customPath.path ? path.resolve(cwd(), customPath?.path, 'shield') : path.join(cwd(), 'shield');
+
+  filePath = path.format({
+    dir: path.dirname(filePath),
+    name: path.basename(filePath, path.extname(filePath)),
+    ext: `.${ext}`,
+  });
+
+  await writeFileSafely(filePath, shieldText);
 };
