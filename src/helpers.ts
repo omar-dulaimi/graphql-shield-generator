@@ -11,7 +11,7 @@ export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
   for (const [type, resolverNames] of Object.entries(typeResolverMap)) {
     if (type.length > 0) {
       const subscriptionLinesWrapped = `${type}: ${wrapWithObject({
-        shieldItemLines: (resolverNames as Array<string>).sort().map((resolverName) => `${resolverName}: allow`),
+        shieldItemLines: resolverNames.sort().map((resolverName) => `${resolverName}: allow`),
       })},`;
       rootItems += subscriptionLinesWrapped;
     }
