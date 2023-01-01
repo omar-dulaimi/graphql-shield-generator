@@ -92,7 +92,7 @@ export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
 
   const filePath = path.format({
     dir: dirPath,
-    name: options.fileName,
+    name: options.fileName ?? 'shield',
     ext: ext,
   });
   return filePath;
