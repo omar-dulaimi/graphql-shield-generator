@@ -1,4 +1,6 @@
-import type { RootType } from './types';
+import path from 'path';
+import { cwd } from 'process';
+import type { CustomPath, RootType } from './types';
 
 export const constructShield = ({
   queries,
@@ -44,6 +46,24 @@ export const constructShield = ({
   });
 
   return shieldText;
+};
+
+export const getOutputPath = (customPath: CustomPath, js: boolean) => {
+  const ext = js ? 'js' : 'ts';
+  let filePath = customPath.path ? path.resolve(cwd(), customPath?.path, 'shield') : path.join(cwd(), 'shield');
+
+  filePath = path.format({
+    dir: path.dirname(filePath),
+    name: path.basename(filePath, path.extname(filePath)),
+    ext: `.${ext}`,
+  });
+  return filePath;
+};
+
+export const sortShieldItems = (queries: RootType[], mutations: RootType[], subscriptions: RootType[]) => {
+  queries.sort();
+  mutations.sort();
+  subscriptions.sort();
 };
 
 export const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {

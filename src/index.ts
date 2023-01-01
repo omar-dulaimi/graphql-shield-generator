@@ -1,9 +1,7 @@
 import { getRootTypeMap } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
-import path from 'path';
-import { cwd } from 'process';
-import { constructShield } from './helpers';
-import type { RootType, CustomPath } from './types';
+import { constructShield, getOutputPath, sortShieldItems } from './helpers';
+import type { CustomPath, RootType } from './types';
 import { writeFileSafely } from './utils/writeFileSafely';
 
 export const generateGraphqlShield = async (schema: GraphQLSchema, customPath: CustomPath, js: boolean = false) => {
@@ -27,19 +25,10 @@ export const generateGraphqlShield = async (schema: GraphQLSchema, customPath: C
     }
   }
 
-  queries.sort();
-  mutations.sort();
-  subscriptions.sort();
+  sortShieldItems(queries, mutations, subscriptions);
 
   const shieldText = constructShield({ queries, mutations, subscriptions });
-  const ext = js ? 'js' : 'ts';
-  let filePath = customPath.path ? path.resolve(cwd(), customPath?.path, 'shield') : path.join(cwd(), 'shield');
+  const outputPath = getOutputPath(customPath, js);
 
-  filePath = path.format({
-    dir: path.dirname(filePath),
-    name: path.basename(filePath, path.extname(filePath)),
-    ext: `.${ext}`,
-  });
-
-  await writeFileSafely(filePath, shieldText);
+  await writeFileSafely(outputPath, shieldText);
 };
