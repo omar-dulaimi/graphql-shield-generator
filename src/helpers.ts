@@ -22,7 +22,7 @@ export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
   let shieldText = getImports('graphql-shield');
   shieldText += '\n\n';
   shieldText += wrapWithExport({
-    shieldObjectText: wrapWithTrpcShieldCall({
+    shieldObjectText: wrapWithGraphqlShieldCall({
       shieldObjectTextWrapped: wrapWithObject({ shieldItemLines: rootItems }),
     }),
   });
@@ -100,15 +100,15 @@ export const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<str
 };
 
 export const getImports = (type: 'graphql-shield') => {
-  const trpcShieldImportStatement = "import { shield, allow } from 'graphql-shield';\n";
-  return trpcShieldImportStatement;
+  const shieldImportStatement = "import { shield, allow } from 'graphql-shield';\n";
+  return shieldImportStatement;
 };
 
 export const wrapWithExport = ({ shieldObjectText }: { shieldObjectText: string }) => {
   return `export const permissions = ${shieldObjectText};`;
 };
 
-export const wrapWithTrpcShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }) => {
+export const wrapWithGraphqlShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }) => {
   let wrapped = 'shield(';
   wrapped += '\n';
   wrapped += '  ' + shieldObjectTextWrapped;
