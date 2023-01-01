@@ -115,7 +115,7 @@ const getImports = (type: 'graphql-shield') => {
 };
 
 const wrapWithExport = ({ shieldObjectText }: { shieldObjectText: string }) => {
-  return ` const permissions = ${shieldObjectText};`;
+  return ` export const permissions = ${shieldObjectText};`;
 };
 
 const wrapWithGraphqlShieldCall = ({
