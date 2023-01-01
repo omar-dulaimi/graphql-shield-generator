@@ -1,4 +1,4 @@
-import { GraphQLSchema } from 'graphql';
+import type { DocumentNode, GraphQLSchema } from 'graphql';
 
 export declare interface TypeResolverMap {
   [name: string]: Array<string>;
@@ -14,7 +14,14 @@ export declare interface GenerateGraphqlShieldOptions {
   extension: 'js' | 'ts';
 }
 
+export declare interface TypeDefsAndResolversArgs {
+  typeDefs: DocumentNode;
+  resolvers: any;
+}
+
+export declare type ShieldGeneratorSchema = GraphQLSchema | TypeDefsAndResolversArgs;
+
 export declare interface GenerateGraphqlShieldArgs {
-  schema: GraphQLSchema;
+  schema: ShieldGeneratorSchema;
   options: GenerateGraphqlShieldOptions;
 }

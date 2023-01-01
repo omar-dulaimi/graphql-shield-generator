@@ -1,8 +1,9 @@
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { getRootTypeMap } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
 import path from 'path';
 import { cwd } from 'process';
-import type { ConstructShieldArgs, GenerateGraphqlShieldOptions, TypeResolverMap } from './types';
+import type { ConstructShieldArgs, GenerateGraphqlShieldOptions, ShieldGeneratorSchema, TypeResolverMap } from './types';
 
 export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
   let rootItems = '';
@@ -29,7 +30,11 @@ export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
   return shieldText;
 };
 
-export const getTypeResolverMap = (schema: GraphQLSchema) => {
+export const getTypeResolverMap = async (schema: ShieldGeneratorSchema) => {
+  if (!(schema instanceof GraphQLSchema)) {
+    schema = await makeExecutableSchema({ typeDefs: schema.typeDefs, resolvers: schema.resolvers });
+  }
+
   const typeResolverMap: TypeResolverMap = {};
 
   const rootTypeMap = getRootTypeMap(schema);
