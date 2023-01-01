@@ -98,11 +98,7 @@ export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
   return filePath;
 };
 
-export const wrapWithObject = ({
-  shieldItemLines,
-}: {
-  shieldItemLines: Array<string> | string;
-}) => {
+const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {
   let wrapped = '{';
   wrapped += '\n';
   wrapped += Array.isArray(shieldItemLines)
@@ -113,16 +109,16 @@ export const wrapWithObject = ({
   return wrapped;
 };
 
-export const getImports = (type: 'graphql-shield') => {
+const getImports = (type: 'graphql-shield') => {
   const shieldImportStatement = "import { shield, allow } from 'graphql-shield';\n";
   return shieldImportStatement;
 };
 
-export const wrapWithExport = ({ shieldObjectText }: { shieldObjectText: string }) => {
-  return `export const permissions = ${shieldObjectText};`;
+const wrapWithExport = ({ shieldObjectText }: { shieldObjectText: string }) => {
+  return ` const permissions = ${shieldObjectText};`;
 };
 
-export const wrapWithGraphqlShieldCall = ({
+const wrapWithGraphqlShieldCall = ({
   shieldObjectTextWrapped,
 }: {
   shieldObjectTextWrapped: string;
