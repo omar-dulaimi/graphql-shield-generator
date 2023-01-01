@@ -2,7 +2,7 @@ import { getRootTypeMap } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
 import path from 'path';
 import { cwd } from 'process';
-import type { ConstructShieldArgs, CustomPath, TypeResolverMap } from './types';
+import type { ConstructShieldArgs, GenerateGraphqlShieldOptions, TypeResolverMap } from './types';
 
 export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
   let rootItems = '';
@@ -73,14 +73,14 @@ export const getTypeResolverMap = (schema: GraphQLSchema) => {
   return typeResolverMap;
 };
 
-export const getOutputPath = (customPath: CustomPath, js: boolean) => {
-  const ext = js ? 'js' : 'ts';
-  let filePath = customPath.path ? path.resolve(cwd(), customPath?.path, 'shield') : path.join(cwd(), 'shield');
+export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
+  const ext = `.${options.extension}` ?? '.js';
+  const dirPath = options.outputDir ? path.resolve(cwd(), options.outputDir) : path.join(cwd());
 
-  filePath = path.format({
-    dir: path.dirname(filePath),
-    name: path.basename(filePath, path.extname(filePath)),
-    ext: `.${ext}`,
+  const filePath = path.format({
+    dir: dirPath,
+    name: options.fileName,
+    ext: ext,
   });
   return filePath;
 };
