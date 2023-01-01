@@ -1,42 +1,23 @@
+import { getRootTypeMap } from '@graphql-tools/utils';
+import { GraphQLSchema } from 'graphql';
 import path from 'path';
 import { cwd } from 'process';
-import type { CustomPath, RootType } from './types';
+import type { ConstructShieldArgs, CustomPath, TypeResolverMap } from './types';
 
-export const constructShield = ({
-  queries,
-  mutations,
-  subscriptions,
-}: {
-  queries: RootType;
-  mutations: RootType;
-  subscriptions: RootType;
-}) => {
-  if (queries.length === 0 && mutations.length === 0 && subscriptions.length === 0) {
-    return '';
-  }
-
+export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
   let rootItems = '';
-  if (queries.length > 0) {
-    const queryLinesWrapped = `Query: ${wrapWithObject({
-      shieldItemLines: queries.map((query) => `${query}: allow`),
-    })},`;
-    rootItems += queryLinesWrapped;
-  }
-  if (mutations.length > 0) {
-    const mutationLinesWrapped = `Mutation: ${wrapWithObject({
-      shieldItemLines: mutations.map((mutation) => `${mutation}: allow`),
-    })},`;
-    rootItems += mutationLinesWrapped;
-  }
 
-  if (subscriptions.length > 0) {
-    const subscriptionLinesWrapped = `Subscription: ${wrapWithObject({
-      shieldItemLines: subscriptions.map((subscription) => `${subscription}: allow`),
-    })},`;
-    rootItems += subscriptionLinesWrapped;
+  for (const [type, resolverNames] of Object.entries(typeResolverMap)) {
+    if (type.length > 0) {
+      const subscriptionLinesWrapped = `${type}: ${wrapWithObject({
+        shieldItemLines: (resolverNames as Array<string>).sort().map((resolverName) => `${resolverName}: allow`),
+      })},`;
+      rootItems += subscriptionLinesWrapped;
+    }
   }
 
   if (rootItems.length === 0) return '';
+
   let shieldText = getImports('graphql-shield');
   shieldText += '\n\n';
   shieldText += wrapWithExport({
@@ -46,6 +27,50 @@ export const constructShield = ({
   });
 
   return shieldText;
+};
+
+export const getTypeResolverMap = (schema: GraphQLSchema) => {
+  const typeResolverMap: TypeResolverMap = {};
+
+  const rootTypeMap = getRootTypeMap(schema);
+  for (const [, rootType] of rootTypeMap.entries()) {
+    const typeName = rootType.name;
+    const fields = rootType.getFields();
+    for (const [resolverName] of Object.entries(fields)) {
+      if (!typeResolverMap[typeName]) {
+        typeResolverMap[typeName] = [];
+      }
+      if (typeName === 'Query') {
+        typeResolverMap[typeName].push(resolverName);
+      } else if (typeName === 'Mutation') {
+        typeResolverMap[typeName].push(resolverName);
+      } else if (typeName === 'Subscription') {
+        typeResolverMap[typeName].push(resolverName);
+      }
+    }
+  }
+
+  const typeMap = schema.getTypeMap();
+  for (const typeName in typeMap) {
+    const type = typeMap[typeName];
+    if (type.astNode?.kind === 'ObjectTypeDefinition' && !['Query', 'Mutation', 'Subscription'].includes(type.name)) {
+      const foundType = schema.getType(type.name);
+      //@ts-ignore
+      const fields = foundType?.toConfig().fields;
+      Object.keys(fields).forEach((fieldName) => {
+        const field = fields[fieldName];
+        const resolver = field.resolve;
+        if (resolver) {
+          if (!typeResolverMap[type.name]) {
+            typeResolverMap[type.name] = [];
+          }
+          typeResolverMap[type.name].push(fieldName);
+        }
+      });
+    }
+  }
+
+  return typeResolverMap;
 };
 
 export const getOutputPath = (customPath: CustomPath, js: boolean) => {
@@ -58,12 +83,6 @@ export const getOutputPath = (customPath: CustomPath, js: boolean) => {
     ext: `.${ext}`,
   });
   return filePath;
-};
-
-export const sortShieldItems = (queries: RootType[], mutations: RootType[], subscriptions: RootType[]) => {
-  queries.sort();
-  mutations.sort();
-  subscriptions.sort();
 };
 
 export const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {
