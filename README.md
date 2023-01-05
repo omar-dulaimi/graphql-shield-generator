@@ -73,7 +73,8 @@ await generateGraphqlShield({
   options: {
     outputDir: './permissions',
     fileName: 'shield',
-    extension: 'ts',
+    extension: 'js',
+    moduleSystem: "CommonJS"
   },
 });
 
@@ -85,6 +86,7 @@ await generateGraphqlShield({
     outputDir: './permissions',
     fileName: 'shield',
     extension: 'ts',
+    moduleSystem: "ES modules"
   },
 });
 ```
@@ -97,11 +99,12 @@ await generateGraphqlShield({
 
 #### `options`
 
-| Property  | Required | Default           | Description                             |
-| --------- | -------- | ----------------- | --------------------------------------- |
-| outputDir | false    | current directory | Directory that shield will be placed in |
-| fileName  | false    | 'shield'          | File name of the generated shield       |
-| extension | false    | 'js'              | File extension of the generated shield  |
+| Property     | Required | Default           | Description                             |
+| ------------ | -------- | ----------------- | --------------------------------------- |
+| outputDir    | false    | current directory | Directory that shield will be placed in |
+| fileName     | false    | 'shield'          | File name of the generated shield       |
+| extension    | false    | 'js'              | File extension of the generated shield  |
+| moduleSystem | false    | 'CommonJS'        | Module system of the generated shield   |
 
 ## Contributing
 

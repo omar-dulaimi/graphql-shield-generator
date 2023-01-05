@@ -4,7 +4,7 @@ import { writeFileSafely } from './utils/writeFileSafely';
 
 export const generateGraphqlShield = async ({ schema, options }: GenerateGraphqlShieldArgs) => {
   const typeResolverMap = await getTypeResolverMap(schema);
-  const shieldText = constructShield({ typeResolverMap });
+  const shieldText = constructShield({ typeResolverMap, options });
   const outputPath = getOutputPath(options);
 
   await writeFileSafely(outputPath, shieldText);

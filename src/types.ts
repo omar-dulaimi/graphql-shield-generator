@@ -6,12 +6,14 @@ export declare interface TypeResolverMap {
 
 export declare interface ConstructShieldArgs {
   typeResolverMap: TypeResolverMap;
+  options: GenerateGraphqlShieldOptions;
 }
 
 export declare interface GenerateGraphqlShieldOptions {
-  outputDir: string;
-  fileName: string;
-  extension: 'js' | 'ts';
+  outputDir?: string;
+  fileName?: string;
+  extension?: 'js' | 'ts';
+  moduleSystem?: 'CommonJS' | 'ES modules';
 }
 
 export declare interface TypeDefsAndResolversArgs {
