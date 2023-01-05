@@ -3,14 +3,9 @@ import { getRootTypeMap } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
 import path from 'path';
 import { cwd } from 'process';
-import type {
-  ConstructShieldArgs,
-  GenerateGraphqlShieldOptions,
-  ShieldGeneratorSchema,
-  TypeResolverMap
-} from './types';
+import type { ConstructShieldArgs, GenerateGraphqlShieldOptions, ShieldGeneratorSchema, TypeResolverMap } from './types';
 
-export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
+export const constructShield = ({ typeResolverMap, options }: ConstructShieldArgs) => {
   let rootItems = '';
 
   for (const [type, resolverNames] of Object.entries(typeResolverMap)) {
@@ -24,12 +19,13 @@ export const constructShield = ({ typeResolverMap }: ConstructShieldArgs) => {
 
   if (rootItems.length === 0) return '';
 
-  let shieldText = getImports('graphql-shield');
+  let shieldText = getImports('graphql-shield', options);
   shieldText += '\n\n';
   shieldText += wrapWithExport({
     shieldObjectText: wrapWithGraphqlShieldCall({
       shieldObjectTextWrapped: wrapWithObject({ shieldItemLines: rootItems }),
     }),
+    options,
   });
 
   return shieldText;
@@ -63,10 +59,7 @@ export const getTypeResolverMap = async (schema: ShieldGeneratorSchema) => {
   const typeMap = schema.getTypeMap();
   for (const typeName in typeMap) {
     const type = typeMap[typeName];
-    if (
-      type.astNode?.kind === 'ObjectTypeDefinition' &&
-      !['Query', 'Mutation', 'Subscription'].includes(type.name)
-    ) {
+    if (type.astNode?.kind === 'ObjectTypeDefinition' && !['Query', 'Mutation', 'Subscription'].includes(type.name)) {
       const foundType = schema.getType(type.name);
       //@ts-ignore
       const fields = foundType?.toConfig().fields;
@@ -101,28 +94,33 @@ export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
 const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {
   let wrapped = '{';
   wrapped += '\n';
-  wrapped += Array.isArray(shieldItemLines)
-    ? '  ' + shieldItemLines.join(',\r\n')
-    : '  ' + shieldItemLines;
+  wrapped += Array.isArray(shieldItemLines) ? '  ' + shieldItemLines.join(',\r\n') : '  ' + shieldItemLines;
   wrapped += '\n';
   wrapped += '}';
   return wrapped;
 };
 
-const getImports = (type: 'graphql-shield') => {
-  const shieldImportStatement = "import { shield, allow } from 'graphql-shield';\n";
-  return shieldImportStatement;
+const getImports = (type: 'graphql-shield', options: GenerateGraphqlShieldOptions) => {
+  switch (options.moduleSystem) {
+    case 'ES modules':
+      return `import { shield, allow } from '${type}';\n`;
+    case 'CommonJS':
+    default:
+      return `const { shield, allow } = require('${type}');\n`;
+  }
 };
 
-const wrapWithExport = ({ shieldObjectText }: { shieldObjectText: string }) => {
-  return ` export const permissions = ${shieldObjectText};`;
+const wrapWithExport = ({ shieldObjectText, options }: { shieldObjectText: string; options: GenerateGraphqlShieldOptions }) => {
+  switch (options.moduleSystem) {
+    case 'ES modules':
+      return ` export const permissions = ${shieldObjectText};`;
+    case 'CommonJS':
+    default:
+      return ` module.exports.permissions = ${shieldObjectText};`;
+  }
 };
 
-const wrapWithGraphqlShieldCall = ({
-  shieldObjectTextWrapped,
-}: {
-  shieldObjectTextWrapped: string;
-}) => {
+const wrapWithGraphqlShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }) => {
   let wrapped = 'shield(';
   wrapped += '\n';
   wrapped += '  ' + shieldObjectTextWrapped;
