@@ -103,10 +103,16 @@ const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | 
 const getImports = (type: 'graphql-shield', options: GenerateGraphqlShieldOptions) => {
   switch (options.moduleSystem) {
     case 'ES modules':
-      return `import { shield, allow } from '${type}';\n`;
+      if (options.customrule)
+        return `import { shield } from '${type}';\n import { ${options.customrule} } from '${options.customrulepath}'`;
+      else
+        return `import { shield, allow } from '${type}';\n`;            
     case 'CommonJS':
     default:
-      return `const { shield, allow } = require('${type}');\n`;
+      if (options.customrule)
+        return `const { shield } = require('${type}');\n const { ${options.customrule} } = require('${options.customrulepath}');`;
+      else
+       return `const { shield, allow } = require('${type}');\n`;        
   }
 };
 
