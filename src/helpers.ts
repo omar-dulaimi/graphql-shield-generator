@@ -24,7 +24,7 @@ export const constructShield = ({ typeResolverMap, options }: ConstructShieldArg
   shieldText += wrapWithExport({
     shieldObjectText: wrapWithGraphqlShieldCall({
       shieldObjectTextWrapped: wrapWithObject({ shieldItemLines: rootItems }),
-    }),
+    }, options),
     options,
   });
 
@@ -94,7 +94,7 @@ export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
 const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {
   let wrapped = '{';
   wrapped += '\n';
-  wrapped += Array.isArray(shieldItemLines) ? '  ' + shieldItemLines.join(',\r\n') : '  ' + shieldItemLines;
+  wrapped += Array.isArray(shieldItemLines) ? ' \'*\': deny, ' + shieldItemLines.join(',\r\n') : '  ' + shieldItemLines;
   wrapped += '\n';
   wrapped += '}';
   return wrapped;
@@ -126,11 +126,11 @@ const wrapWithExport = ({ shieldObjectText, options }: { shieldObjectText: strin
   }
 };
 
-const wrapWithGraphqlShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }) => {
+const wrapWithGraphqlShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }, options: GenerateGraphqlShieldOptions) => {
   let wrapped = 'shield(';
   wrapped += '\n';
   wrapped += '  ' + shieldObjectTextWrapped;
-  wrapped += '\n';
+  wrapped += `\n, ${options.shieldoptions ?? '' }`;
   wrapped += ')';
   return wrapped;
 };

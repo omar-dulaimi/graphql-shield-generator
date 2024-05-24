@@ -16,7 +16,7 @@ export declare interface GenerateGraphqlShieldOptions {
   moduleSystem?: 'CommonJS' | 'ES modules';
   customrule?: string;
   customrulepath?: string;
-
+  shieldoptions?: string;
 }
 
 export declare interface TypeDefsAndResolversArgs {
