@@ -10,9 +10,10 @@ export const constructShield = ({ typeResolverMap, options }: ConstructShieldArg
 
   for (const [type, resolverNames] of Object.entries(typeResolverMap)) {
     if (type.length > 0) {
-      const subscriptionLinesWrapped = `${type}: ${wrapWithObject({
-        shieldItemLines: resolverNames.sort().map((resolverName) => `${resolverName}: allow`),
-      })},`;
+            const subscriptionLinesWrapped = `${type}:  ${wrapWithObject({                  
+                  shieldItemLines: !options.groupbyobjects ? resolverNames.sort().map((resolverName) => `'${resolverName}' : ${options.customrule ?? 'allow' }`) 
+                   : resolverNames.map(resolverName => resolverName.split('').reverse().join('')).sort().map(reversedResolverName => `'${reversedResolverName.split('').reverse().join('')}': ${options.customrule ?? 'allow' }`),
+            })},`;
       rootItems += subscriptionLinesWrapped;
     }
   }

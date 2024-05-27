@@ -16,6 +16,7 @@ export declare interface GenerateGraphqlShieldOptions {
   moduleSystem?: 'CommonJS' | 'ES modules';
   customrule?: string;
   customrulepath?: string;
+  groupbyobjects?: boolean;
   shieldoptions?: string;
 }
 
