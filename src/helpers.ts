@@ -10,9 +10,10 @@ export const constructShield = ({ typeResolverMap, options }: ConstructShieldArg
 
   for (const [type, resolverNames] of Object.entries(typeResolverMap)) {
     if (type.length > 0) {
-      const subscriptionLinesWrapped = `${type}: ${wrapWithObject({
-        shieldItemLines: resolverNames.sort().map((resolverName) => `${resolverName}: allow`),
-      })},`;
+            const subscriptionLinesWrapped = `${type}:  ${wrapWithObject({                  
+                  shieldItemLines: !options.groupbyobjects ? resolverNames.sort().map((resolverName) => `'${resolverName}' : ${options.customrule ?? 'allow' }`) 
+                   : resolverNames.map(resolverName => resolverName.split('').reverse().join('')).sort().map(reversedResolverName => `'${reversedResolverName.split('').reverse().join('')}': ${options.customrule ?? 'allow' }`),
+            })},`;
       rootItems += subscriptionLinesWrapped;
     }
   }
@@ -24,7 +25,7 @@ export const constructShield = ({ typeResolverMap, options }: ConstructShieldArg
   shieldText += wrapWithExport({
     shieldObjectText: wrapWithGraphqlShieldCall({
       shieldObjectTextWrapped: wrapWithObject({ shieldItemLines: rootItems }),
-    }),
+    }, options),
     options,
   });
 
@@ -94,7 +95,7 @@ export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
 const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {
   let wrapped = '{';
   wrapped += '\n';
-  wrapped += Array.isArray(shieldItemLines) ? '  ' + shieldItemLines.join(',\r\n') : '  ' + shieldItemLines;
+  wrapped += Array.isArray(shieldItemLines) ? ' \'*\': deny, ' + shieldItemLines.join(',\r\n') : '  ' + shieldItemLines;
   wrapped += '\n';
   wrapped += '}';
   return wrapped;
@@ -103,10 +104,16 @@ const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | 
 const getImports = (type: 'graphql-shield', options: GenerateGraphqlShieldOptions) => {
   switch (options.moduleSystem) {
     case 'ES modules':
-      return `import { shield, allow } from '${type}';\n`;
+      if (options.customrule)
+        return `import { shield } from '${type}';\n import { ${options.customrule} } from '${options.customrulepath}'`;
+      else
+        return `import { shield, allow } from '${type}';\n`;            
     case 'CommonJS':
     default:
-      return `const { shield, allow } = require('${type}');\n`;
+      if (options.customrule)
+        return `const { shield } = require('${type}');\n const { ${options.customrule} } = require('${options.customrulepath}');`;
+      else
+       return `const { shield, allow } = require('${type}');\n`;        
   }
 };
 
@@ -120,11 +127,11 @@ const wrapWithExport = ({ shieldObjectText, options }: { shieldObjectText: strin
   }
 };
 
-const wrapWithGraphqlShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }) => {
+const wrapWithGraphqlShieldCall = ({ shieldObjectTextWrapped }: { shieldObjectTextWrapped: string }, options: GenerateGraphqlShieldOptions) => {
   let wrapped = 'shield(';
   wrapped += '\n';
   wrapped += '  ' + shieldObjectTextWrapped;
-  wrapped += '\n';
+  wrapped += `\n, ${options.shieldoptions ?? '' }`;
   wrapped += ')';
   return wrapped;
 };
