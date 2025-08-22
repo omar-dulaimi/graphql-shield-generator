@@ -1,6 +1,6 @@
 {
   "name": "graphql-shield-generator",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Emits a GraphQL Shield from your GraphQL schema",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
