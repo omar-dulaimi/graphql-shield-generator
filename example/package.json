@@ -1,0 +1,20 @@
+{
+  "name": "graphql-shield-generator-example",
+  "version": "1.0.0",
+  "scripts": {
+    "test-current": "ts-node test-current.ts",
+    "test-pr": "ts-node test-pr.ts",
+    "test-fixes": "ts-node test-fixes.ts"
+  },
+  "dependencies": {
+    "graphql": "^16.11.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-shield": "^7.6.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2",
+    "@types/node": "^24.3.0"
+  },
+  "ts-node": {
+    "esm": true
+  }
+}

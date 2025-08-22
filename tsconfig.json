@@ -12,7 +12,6 @@
     "module": "commonjs",
     "target": "es2019",
     "lib": ["es2019", "DOM"],
-    "suppressImplicitAnyIndexErrors": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "sourceMap": true,

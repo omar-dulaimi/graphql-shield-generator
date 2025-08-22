@@ -89,6 +89,21 @@ await generateGraphqlShield({
     moduleSystem: "ES modules"
   },
 });
+
+// or optional override of custom rule
+
+await generateGraphqlShield({
+  schema: { typeDefs, resolvers },
+  options: {
+    outputDir: './permissions',
+    fileName: 'shield',
+    extension: 'ts',
+    moduleSystem: "ES modules",
+		customrule: 'hasAuth',
+		customrulepath: '../../src/graphql-shield/hasAuth',
+  },
+});
+
 ```
 
 ## Documentation

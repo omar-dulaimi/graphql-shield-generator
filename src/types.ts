@@ -14,6 +14,11 @@ export declare interface GenerateGraphqlShieldOptions {
   fileName?: string;
   extension?: 'js' | 'ts';
   moduleSystem?: 'CommonJS' | 'ES modules';
+  customrule?: string;
+  customrulepath?: string;
+  groupbyobjects?: boolean;
+  shieldoptions?: string;
+  fallbackRule?: 'deny' | 'allow' | false;
 }
 
 export declare interface TypeDefsAndResolversArgs {
