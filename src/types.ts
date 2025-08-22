@@ -18,6 +18,7 @@ export declare interface GenerateGraphqlShieldOptions {
   customrulepath?: string;
   groupbyobjects?: boolean;
   shieldoptions?: string;
+  fallbackRule?: 'deny' | 'allow' | false;
 }
 
 export declare interface TypeDefsAndResolversArgs {

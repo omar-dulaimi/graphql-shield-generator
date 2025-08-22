@@ -8,12 +8,25 @@ import type { ConstructShieldArgs, GenerateGraphqlShieldOptions, ShieldGenerator
 export const constructShield = ({ typeResolverMap, options }: ConstructShieldArgs) => {
   let rootItems = '';
 
-  for (const [type, resolverNames] of Object.entries(typeResolverMap)) {
+  // Sort types by priority if groupbyobjects is enabled
+  const typeEntries = Object.entries(typeResolverMap);
+  const sortedTypes = options.groupbyobjects 
+    ? typeEntries.sort(([typeA], [typeB]) => {
+        const priority = { Query: 1, Mutation: 2, Subscription: 3 };
+        const priorityA = priority[typeA as keyof typeof priority] || 99;
+        const priorityB = priority[typeB as keyof typeof priority] || 99;
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        return typeA.localeCompare(typeB);
+      })
+    : typeEntries;
+
+  for (const [type, resolverNames] of sortedTypes) {
     if (type.length > 0) {
-            const subscriptionLinesWrapped = `${type}:  ${wrapWithObject({                  
-                  shieldItemLines: !options.groupbyobjects ? resolverNames.sort().map((resolverName) => `'${resolverName}' : ${options.customrule ?? 'allow' }`) 
-                   : resolverNames.map(resolverName => resolverName.split('').reverse().join('')).sort().map(reversedResolverName => `'${reversedResolverName.split('').reverse().join('')}': ${options.customrule ?? 'allow' }`),
-            })},`;
+      const sortedResolvers = resolverNames.sort().map((resolverName) => `'${resolverName}': ${options.customrule ?? 'allow'}`);
+      const subscriptionLinesWrapped = `${type}: ${wrapWithObject({
+        shieldItemLines: sortedResolvers,
+        options,
+      })},`;
       rootItems += subscriptionLinesWrapped;
     }
   }
@@ -24,7 +37,7 @@ export const constructShield = ({ typeResolverMap, options }: ConstructShieldArg
   shieldText += '\n\n';
   shieldText += wrapWithExport({
     shieldObjectText: wrapWithGraphqlShieldCall({
-      shieldObjectTextWrapped: wrapWithObject({ shieldItemLines: rootItems }),
+      shieldObjectTextWrapped: wrapWithObject({ shieldItemLines: rootItems, options }),
     }, options),
     options,
   });
@@ -92,28 +105,45 @@ export const getOutputPath = (options: GenerateGraphqlShieldOptions) => {
   return filePath;
 };
 
-const wrapWithObject = ({ shieldItemLines }: { shieldItemLines: Array<string> | string }) => {
+const wrapWithObject = ({ shieldItemLines, options }: { shieldItemLines: Array<string> | string; options?: GenerateGraphqlShieldOptions }) => {
   let wrapped = '{';
   wrapped += '\n';
-  wrapped += Array.isArray(shieldItemLines) ? ' \'*\': deny, ' + shieldItemLines.join(',\r\n') : '  ' + shieldItemLines;
+  
+  if (Array.isArray(shieldItemLines)) {
+    const fallbackRule = options?.fallbackRule;
+    const fallbackLine = fallbackRule ? `  '*': ${fallbackRule},\n` : '';
+    wrapped += fallbackLine + '  ' + shieldItemLines.join(',\n  ');
+  } else {
+    wrapped += '  ' + shieldItemLines;
+  }
+  
   wrapped += '\n';
   wrapped += '}';
   return wrapped;
 };
 
 const getImports = (type: 'graphql-shield', options: GenerateGraphqlShieldOptions) => {
+  const needsDeny = options.fallbackRule === 'deny';
+  const needsAllow = !options.customrule || options.fallbackRule === 'allow';
+  
+  const imports = ['shield'];
+  if (needsAllow) imports.push('allow');
+  if (needsDeny) imports.push('deny');
+  
   switch (options.moduleSystem) {
     case 'ES modules':
-      if (options.customrule)
-        return `import { shield } from '${type}';\n import { ${options.customrule} } from '${options.customrulepath}'`;
-      else
-        return `import { shield, allow } from '${type}';\n`;            
+      let result = `import { ${imports.join(', ')} } from '${type}';\n`;
+      if (options.customrule) {
+        result += `import { ${options.customrule} } from '${options.customrulepath}';\n`;
+      }
+      return result;
     case 'CommonJS':
     default:
-      if (options.customrule)
-        return `const { shield } = require('${type}');\n const { ${options.customrule} } = require('${options.customrulepath}');`;
-      else
-       return `const { shield, allow } = require('${type}');\n`;        
+      let resultCommon = `const { ${imports.join(', ')} } = require('${type}');\n`;
+      if (options.customrule) {
+        resultCommon += `const { ${options.customrule} } = require('${options.customrulepath}');\n`;
+      }
+      return resultCommon;
   }
 };
 
