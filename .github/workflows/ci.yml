@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build on Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both versions the packaged artefact is verified against below. Nothing is keyed to a
+        # single entry of this matrix, so removing or adding a version cannot silently disable a
+        # step.
+        node-version: ['22.x', '24.x']
+    steps:
+      - uses: actions/checkout@v5
+
+      # Deliberately no `registry-url`: it writes an .npmrc containing an authToken placeholder,
+      # which gets in the way of the OIDC exchange the release workflow depends on. Nothing in CI
+      # talks to the registry as an authenticated user.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+
+      # `build` is `tsc`, so this is the typecheck too: a type error fails the compile. There is
+      # deliberately nothing else here. The repo defines no test script, and its `prettier` script
+      # rewrites files rather than checking them, so it is a formatter and not a gate. Adding a
+      # linter or a placeholder test the project does not have would only buy a green tick.
+      # Behaviour is covered by the packaged-artifact job below.
+      - name: Build and typecheck
+        run: npm run build
+
+      - name: The build must produce the entrypoints package.json advertises
+        run: |
+          set -euo pipefail
+          test -f lib/index.js
+          test -f lib/index.d.ts
+
+  packaged-artifact:
+    name: Packaged artifact on Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['22.x', '24.x']
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Pack the tarball npm would publish
+        id: pack
+        run: |
+          set -euo pipefail
+          # `prepare` runs the build, so this is built exactly the way `npm publish` builds it,
+          # and `files` decides what lands inside. Printing the contents means a release that
+          # loses a file leaves evidence in the log.
+          tarball="$(npm pack --silent)"
+          echo "tarball=${PWD}/${tarball}" >> "$GITHUB_OUTPUT"
+          tar -tzf "$tarball" | sort
+
+      - name: Install the tarball into an empty directory
+        run: |
+          set -euo pipefail
+          install_dir="${{ runner.temp }}/packaged-install"
+          rm -rf "$install_dir"
+          mkdir -p "$install_dir"
+          cd "$install_dir"
+          npm init -y > /dev/null
+          # Outside the repository on purpose. Installed into a subdirectory of the checkout,
+          # Node would resolve the repo's own node_modules and src tree on the way up, and a
+          # dependency missing from the tarball would still appear to work.
+          # `graphql` is a peer dependency, so a real consumer supplies it. Everything else has
+          # to come from the tarball's own dependency list.
+          npm install --no-audit --no-fund '${{ steps.pack.outputs.tarball }}' 'graphql@^16'
+          npm ls --depth=0
+
+      - name: Run the README's headline command against that install
+        run: |
+          set -euo pipefail
+          install_dir="${{ runner.temp }}/packaged-install"
+          cp "${GITHUB_WORKSPACE}/.github/scripts/verify-packaged-install.mjs" "$install_dir/"
+          cd "$install_dir"
+          node verify-packaged-install.mjs

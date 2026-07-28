@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Nothing is published unless the build and the packaged-artefact check have both passed on this
+  # exact commit, on every supported Node version.
+  verify:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      # Required. @semantic-release/npm requests a GitHub OIDC token and exchanges it with npm for
+      # a short-lived publish credential; without this the request fails and there is no token to
+      # fall back on, because the npm account disallows them.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Node 24 is load-bearing, not a preference: the trusted-publishing exchange needs npm
+      # >= 11.5.1, and Node 22 still bundles npm 10.
+      # Deliberately no `registry-url`: it writes an .npmrc containing an authToken placeholder,
+      # which gets in the way of the exchange below.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # No npm token: the account requires 2FA and disallows tokens, so auth is the OIDC exchange
+      # alone. Setting NPM_TOKEN here would write a conflicting .npmrc and take the old code path.
+      - name: Semantic release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run release
