@@ -39,7 +39,7 @@
 
 ## Why GraphQL Shield Generator?
 
-Transform your GraphQL schema into a complete permission system in seconds. No more manually writing repetitive shield configurations—let the generator handle it while you focus on your business logic.
+Transform your GraphQL schema into a complete permission system in seconds. No more manually writing repetitive shield configurations. Let the generator handle it while you focus on your business logic.
 
 ```typescript
 // ✨ From this schema...
