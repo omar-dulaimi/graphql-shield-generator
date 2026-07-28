@@ -4,11 +4,15 @@
   "description": "Emits a GraphQL Shield from your GraphQL schema",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rimraf lib",
     "build": "tsc",
+    "prepare": "npm run build",
     "prerelease": "npm run build",
-    "release": "./package.sh && cd package && npm publish",
+    "release": "./package.sh && cd package && npm publish --ignore-scripts",
     "prettier": "prettier --ignore-path .gitignore --write --list-different \"**/*.ts\""
   },
   "repository": {
@@ -36,5 +40,8 @@
     "@graphql-tools/schema": "^10.0.25",
     "@graphql-tools/utils": "^10.9.1",
     "prettier": "^3.6.2"
+  },
+  "peerDependencies": {
+    "graphql": "^16 || ^17"
   }
 }

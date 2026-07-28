@@ -125,11 +125,19 @@ const wrapWithObject = ({ shieldItemLines, options }: { shieldItemLines: Array<s
 const getImports = (type: 'graphql-shield', options: GenerateGraphqlShieldOptions) => {
   const needsDeny = options.fallbackRule === 'deny';
   const needsAllow = !options.customrule || options.fallbackRule === 'allow';
-  
+
+  if (options.customrule && !options.customrulepath) {
+    throw new Error(
+      `graphql-shield-generator: 'customrule' was set to '${options.customrule}' but 'customrulepath' is missing. ` +
+        `The generated shield references '${options.customrule}', so the generator needs to know where to import it from. ` +
+        `Set 'customrulepath' to the module that exports '${options.customrule}', for example './auth/${options.customrule}'.`,
+    );
+  }
+
   const imports = ['shield'];
   if (needsAllow) imports.push('allow');
   if (needsDeny) imports.push('deny');
-  
+
   switch (options.moduleSystem) {
     case 'ES modules':
       let result = `import { ${imports.join(', ')} } from '${type}';\n`;
